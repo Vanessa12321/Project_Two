@@ -1,0 +1,53 @@
+---
+title: "Models_Used"
+author: "Vanessa Zepeda"
+date: "2025-09-24"
+output: html_document
+---
+
+### **For Paper**
+
+have a section that recreates what they did
+
+-   commenting on the appropriateness of this
+-   the following will go into that section:
+
+## Write down the model that the authors used, in mathematical notation. Comment on the appropriateness of the models used by the authors in the study.
+
+### Model Used:
+
+$$
+\text{TibiaAcc_Axial}_{i} = \beta_0 + \beta_1\text{surfaceID}_{i} + \epsilon_i
+$$
+
+### **What They Did:**
+
+-   averaged the results
+
+-   conducted mutliple ANOVAs on the group means
+
+    -   doing multiple ANOVAs could increase the likelihood of introducing a type 1 error
+
+-   Bonferroni to reduce type 1 error
+
+### **Appropriateness of one-way ANOVAs**
+
+-   ANOVA tests assume normality, homogeneity of variance (equal variances), and independence of observations
+
+    -   In this study, the assumption of independent observations is violated. observations across each surface from the same runner are not independent.
+
+    -   By not taking this factor into account, the ANOVA treats each measurement as if they came from different people
+
+        -   misleading results: the residual variance is inflated because individual variability isn't accounted for. Further, we can assume that the standard errors and p-values are also incorrect/misleading
+
+### **Appropriateness of Bonferroni Correction**
+
+-   The authors applied the Bonferroni Correction to control for the type 1 error introduced by the multiple one-way ANOVAs. In doing this, however, the method increases the type 2 error
+
+-   Issue with this is that the Bonferroni Correction is much too conservative
+
+-   Its conservativeness coupled with it being used on an already small sample size (n=15), BC likely overcorrects, making it difficult to produce statistically sound results.
+
+    -   study starts out with low statistical power. Bonferroni, while controlling for type 1, lowers the statistical power even more, increasing type 2 error
+
+    -   
