@@ -20,34 +20,50 @@ $$
 \text{TibiaAcc_Axial}_{i} = \beta_0 + \beta_1\text{surfaceID}_{i} + \epsilon_i
 $$
 
+-   This model was estimated seperately for each dependent variable
+
 ### **What They Did:**
 
--   averaged the results
+-   averaged the results by surface type to calculate group means and standard deviations
 
--   conducted mutliple ANOVAs on the group means
+-   conducted mutliple one-way ANOVAs comparing group means across surfaces for each dependent variable
 
     -   doing multiple ANOVAs could increase the likelihood of introducing a type 1 error
 
--   Bonferroni to reduce type 1 error
+-   Bonferroni to reduce FWER caused by these multiple comparisons
 
 ### **Appropriateness of one-way ANOVAs**
 
--   ANOVA tests assume normality, homogeneity of variance (equal variances), and independence of observations
+-   **Assumptions of ANOVA**: ANOVA tests assume **normality**, **homogeneity of variance** (equal variances), and **independence** of observations
 
-    -   In this study, the assumption of independent observations is violated. observations across each surface from the same runner are not independent.
+    -   In this study, the assumption of independent observations is violated as each participant ran on all three surfaces (obsrvations across surfaces come from the same individuals)
 
-    -   By not taking this factor into account, the ANOVA treats each measurement as if they came from different people
+    -   Measurements taken from the same participants across difference surfaces are not independent but related
 
-        -   misleading results: the residual variance is inflated because individual variability isn't accounted for. Further, we can assume that the standard errors and p-values are also incorrect/misleading
+-   **Consequence of Ignoring Dependency**: ANOVA fails to recognize that each participant's results are inherently connected across surfaces
 
-### **Appropriateness of Bonferroni Correction**
+    -   residual variance to inflate because individual variability isn't account for
 
--   The authors applied the Bonferroni Correction to control for the type 1 error introduced by the multiple one-way ANOVAs. In doing this, however, the method increases the type 2 error
+    -   Standard errors and p-values are likely misleading
 
--   Issue with this is that the Bonferroni Correction is much too conservative
+    -   statistical power is rduced, making it less likely to detect real differences
 
--   Its conservativeness coupled with it being used on an already small sample size (n=15), BC likely overcorrects, making it difficult to produce statistically sound results.
+    -   Results may understate differences because individual variance heavily influences the error term
 
-    -   study starts out with low statistical power. Bonferroni, while controlling for type 1, lowers the statistical power even more, increasing type 2 error
+### **Appropriateness of Bonferroni Correction (BC)**
 
-    -   
+-   **Rationale**: The authors applied the Bonferroni Correction to control for the type 1 error introduced by the multiple one-way ANOVAs. For example, with 9 total ANOVAs, the FWER inflates: $$\text{FWER} = 1 - (1 - 0.05)^9 \approx 0.37$$ meaning there is a 37% chance of at least one false positive. BC adjusts for this by lowering the significance threshold $\alpha_{adj} = \frac{\alpha}{m}$. So, if m = 9 and alpha = 0.05, then our adjusted $\alpha$ value decreases to 0.006, making a result significant only if $p < 0.006$
+
+    -   Likely that no variables remain significant, which is consistent with the conclusion made.
+
+-   **Consequence of Bonferroni Correction**
+
+    -   **Too Conservative:** Bonferroni is much too conservative, especially when tests are not independent. This will further reduce the statistical pwoer and increase type 2 errors
+
+    -   **Amplifies Power Issues:** Its conservativeness coupled with it being used on an already small sample size (n=15), BC likely over corrects, making it difficult to produce statistically sound results
+
+    -   **Fails to Address the Real Issue:** Bonferroni controls the type 1 error due to multiple tests, but this does not solve the problem of dependence in the tests
+
+    -   Even with Bonferroni, the analysis remains flawed as the model structure is incorrect.
+
+-   
