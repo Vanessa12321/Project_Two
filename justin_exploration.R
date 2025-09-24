@@ -1,0 +1,137 @@
+library(tidyverse)
+library(reactable) 
+library(glue)
+library(lme4) 
+
+setwd("/Users/justinchoi/Applied Stats Practicum/applied_stat_fa25/running_surfaces")
+data = read.csv("running_surface_data.csv") 
+
+data$subID = as.factor(data$subID)
+data$surfaceID = as.factor(data$surfaceID) 
+
+# recreating figure 3 
+axial_acc_mean = data %>% 
+  group_by(surfaceID) %>% 
+  summarize(
+    mean_axial = mean(TibiaAcc_Axial), 
+    sd_axial = sd(TibiaAcc_Axial)
+  ) %>% 
+  mutate(
+    lower95 = mean_axial - 2 * sd_axial, 
+    upper95 = mean_axial + 2 * sd_axial, 
+    surfaceID_num = as.numeric(surfaceID)
+  ) %>% 
+  rename(TibiaAcc_Axial = mean_axial)
+
+ggplot(data, aes(x=surfaceID, y=TibiaAcc_Axial)) + 
+  geom_point(shape = 18, size=2, aes(color=subID), show.legend = F) + 
+  geom_line(aes(group = subID, color=subID), show.legend = F) + 
+  geom_ribbon(data = axial_acc_mean,
+              aes(ymin = lower95, ymax = upper95, x = surfaceID_num),
+              fill = "#717171", alpha = 0.2, inherit.aes = F) +
+  geom_point(data = axial_acc_mean) + 
+  geom_line(data = axial_acc_mean, group=1) + 
+  ylim(0, 15) + 
+  theme_classic() + 
+  labs(
+    x = NULL, 
+    y = "Acceleration [g]"
+  )
+ 
+# recreating figure 4 
+res_acc_mean = data %>% 
+  group_by(surfaceID) %>% 
+  summarize(
+    mean_resultant = mean(TibiaAcc_Resultant), 
+    sd_resultant = sd(TibiaAcc_Resultant)
+  ) %>% 
+  mutate(
+    lower95 = mean_resultant - 2 * sd_resultant, 
+    upper95 = mean_resultant + 2 * sd_resultant, 
+    surfaceID_num = as.numeric(surfaceID)
+  ) %>% 
+  rename(TibiaAcc_Resultant = mean_resultant)
+
+ggplot(data, aes(x=surfaceID, y=TibiaAcc_Resultant)) + 
+  geom_point(shape = 18, size=2, aes(color=subID), show.legend = F) + 
+  geom_line(aes(group = subID, color=subID), show.legend = F) + 
+  geom_ribbon(data = res_acc_mean,
+              aes(ymin = lower95, ymax = upper95, x = surfaceID_num),
+              fill = "#717171", alpha = 0.2, inherit.aes = F) +
+  geom_point(data = res_acc_mean) + 
+  geom_line(data = res_acc_mean, group=1) + 
+  ylim(0,25) + 
+  theme_classic() + 
+  labs(
+    x = NULL, 
+    y = "Acceleration [g]"
+  ) 
+
+# recreating table 1 
+create_table_1 = function(data) {
+  cols = colnames(
+    data %>% 
+      select(StrideRate, TibiaAcc_Break, TibiaAcc_Propulsion, TibiaAcc_Axial, 
+             TibiaAcc_Medial, TibiaAcc_Lateral, TibiaAcc_Resultant, ShockAtten, ShockAtten_Resultant)
+  )
+  result = tibble() 
+  for (i in 1:length(cols)) { 
+    # things needed for first four columns 
+    response = cols[i]
+    mean_sd = data %>% 
+      group_by(surfaceID) %>% 
+      summarize(
+        mean = mean(!!sym(response)), 
+        sd = sd(!!sym(response)) 
+      ) 
+    dirt_mean = mean_sd[1,2]
+    dirt_sd = mean_sd[1,3] 
+    gravel_mean = mean_sd[2,2]
+    gravel_sd = mean_sd[2,3]
+    paved_mean = mean_sd[3,2]
+    paved_sd = mean_sd[3,3]
+
+    full_formula = as.formula(glue("{response} ~ surfaceID")) 
+    reduced_formula = as.formula(glue("{response} ~ 1"))
+
+    # things need for last two columns 
+    full = lm(full_formula, data = data) 
+    reduced = lm(reduced_formula, data = data) 
+    anova = anova(full, reduced) 
+    es = round(1 - (anova$RSS[1] / anova$RSS[2]), 2) 
+    p = round(anova$`Pr(>F)`[2], 2) 
+
+    entry = tibble(
+      Variable = response, 
+      Dirt = sprintf("%.2f \u00B1 %.2f", dirt_mean, dirt_sd), 
+      Gravel = sprintf("%.2f \u00B1 %.2f", gravel_mean, gravel_sd), 
+      Paved = sprintf("%.2f \u00B1 %.2f", paved_mean, paved_sd), 
+      ES = es, 
+      p_value = p 
+    )
+
+    result = bind_rows(result, entry)
+  }
+  return(result)
+}
+
+table_1 = create_table_1(data)
+
+# modify ES values under 0.01 
+table_1 = table_1 %>% 
+  mutate(
+    ES = as.character(ES), 
+    ES = case_when(
+      ES == "0" ~ "<0.01", 
+      .default = "0.01"
+    )
+  )
+
+no_runner = lm(TibiaAcc_Axial ~ surfaceID, data = data) 
+summary(no_runner) 
+with_runner = lm(TibiaAcc_Axial ~ surfaceID + subID, data = data) 
+summary(with_runner) 
+mixed = lmer(TibiaAcc_Axial ~ surfaceID + (1 | subID), data = data)  
+summary(mixed)
+
+# bootstrapping confidence intervals 
