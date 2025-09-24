@@ -2,10 +2,9 @@ library(tidyverse)
 library(reactable) 
 library(glue)
 library(lme4) 
+library(boot) 
 
-setwd("/Users/justinchoi/Applied Stats Practicum/applied_stat_fa25/running_surfaces")
 data = read.csv("running_surface_data.csv") 
-
 data$subID = as.factor(data$subID)
 data$surfaceID = as.factor(data$surfaceID) 
 
@@ -135,3 +134,17 @@ mixed = lmer(TibiaAcc_Axial ~ surfaceID + (1 | subID), data = data)
 summary(mixed)
 
 # bootstrapping confidence intervals 
+boot_function = function(data, indices, y_var) {
+  formula = as.formula(glue("{y_var} ~ surfaceID + subID"))
+  d = data[indices, ] 
+  m = lm(formula, data = d) 
+  return(coef(m))
+} 
+
+boot_results = boot(data = data, statistic = boot_function, 
+  strata = data[,"subID"], R = 1000, y_var="TibiaAcc_Axial") 
+boot.ci(boot_results, type = "bca", index = 2)
+boot.ci(boot_results, type = "bca", index = 3) 
+hist(boot_results$t[,2]) 
+hist(boot_results$t[,3])
+
