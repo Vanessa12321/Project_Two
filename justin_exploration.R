@@ -143,8 +143,33 @@ boot_function = function(data, indices, y_var) {
 
 boot_results = boot(data = data, statistic = boot_function, 
   strata = data[,"subID"], R = 1000, y_var="TibiaAcc_Axial") 
-boot.ci(boot_results, type = "bca", index = 2)
-boot.ci(boot_results, type = "bca", index = 3) 
-hist(boot_results$t[,2]) 
-hist(boot_results$t[,3])
+gravel_boot_sims = data.frame(sims = boot_results$t[,2]) 
+paved_boot_sims = data.frame(sims = boot_results$t[,3]) 
+gravel_ci = boot.ci(boot_results, type = "bca", index = 2)
+paved_ci = boot.ci(boot_results, type = "bca", index = 3) 
 
+# gravel surface 
+ggplot(gravel_boot_sims, aes(x=sims)) + 
+  geom_histogram(bins=20, fill="skyblue") + 
+  geom_vline(xintercept = gravel_ci$bca[,4], linetype="dashed", color="red") + 
+  geom_vline(xintercept = gravel_ci$bca[,5], linetype="dashed", color="red") + 
+  theme_bw() + 
+  labs(
+    x = "Regression Coefficient", 
+    y = "Count", 
+    title = "1000 Bootstrap Samples of Gravel Surface Coefficient", 
+    subtitle = "95% CI = (0.117, 0.812)"
+  )
+
+# paved surface 
+ggplot(paved_boot_sims, aes(x=sims)) + 
+  geom_histogram(bins=20, fill="orange") + 
+  geom_vline(xintercept = paved_ci$bca[,4], linetype="dashed", color="red") + 
+  geom_vline(xintercept = paved_ci$bca[,5], linetype="dashed", color="red") + 
+  theme_bw() + 
+  labs(
+    x = "Regression Coefficient", 
+    y = "Count", 
+    title = "1000 Bootstrap Samples of Paved Surface Coefficient", 
+    subtitle = "95% CI = (0.119, 0.865)"
+  )
